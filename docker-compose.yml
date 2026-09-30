@@ -1,0 +1,83 @@
+# Development environment for the AmazonSES Matomo plugin.
+# Usage: make up && make install   ->  http://localhost:8080 (admin / admin123)
+# Sent emails (mock SES): http://localhost:8005
+
+services:
+  db:
+    image: mariadb:lts
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: matomo
+      MARIADB_USER: matomo
+      MARIADB_PASSWORD: matomo
+    volumes:
+      - db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      retries: 20
+
+  ses-mock:
+    image: node:22-alpine
+    command: ["npx", "-y", "aws-ses-v2-local@2.10.2", "--host", "0.0.0.0", "--port", "8005"]
+    environment:
+      # fake account returned by GetAccount (sandbox mode, 200 emails / 24h)
+      AWS_SES_ACCOUNT: >-
+        {"DedicatedIpAutoWarmupEnabled":false,"Details":{"AdditionalContactEmailAddresses":[],"ContactLanguage":"EN",
+        "MailType":"TRANSACTIONAL","ReviewDetails":{"CaseId":"mock","Status":"PENDING"},"UseCaseDescription":"mock",
+        "WebsiteURL":"http://localhost:8080"},"EnforcementStatus":"HEALTHY","ProductionAccessEnabled":false,
+        "SendingEnabled":true,"SendQuota":{"Max24HourSend":200,"MaxSendRate":1,"SentLast24Hours":0},
+        "SuppressionAttributes":{"SuppressedReasons":["BOUNCE","COMPLAINT"]}}
+    ports:
+      - "8005:8005"
+
+  matomo:
+    image: matomo:${MATOMO_VERSION:-5.14}-apache
+    depends_on:
+      db:
+        condition: service_healthy
+      ses-mock:
+        condition: service_started
+    ports:
+      - "8080:80"
+    environment:
+      MATOMO_DATABASE_HOST: db
+      MATOMO_DATABASE_USERNAME: matomo
+      MATOMO_DATABASE_PASSWORD: matomo
+      MATOMO_DATABASE_DBNAME: matomo
+      MATOMO_DATABASE_TABLES_PREFIX: matomo_
+      # Read by the plugin (see Settings/ConfigReader.php and the credential chain).
+      # Defaults target the local SES mock; override them in .env to use real Amazon SES.
+      AWS_REGION: ${AWS_REGION:-eu-west-1}
+      AWS_ENDPOINT_URL_SESV2: ${AWS_ENDPOINT_URL_SESV2-http://ses-mock:8005}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-AKIAMOCKMOCKMOCKMOCK}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-mock-secret}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
+      AWS_EC2_METADATA_DISABLED: "true"
+    volumes:
+      - matomo:/var/www/html
+      - ./:/var/www/html/plugins/AmazonSES
+
+  # Matomo test suite runner: `make test` (uses a Matomo git checkout in .cache/matomo)
+  tests:
+    profiles: ["test"]
+    build:
+      context: .docker
+      dockerfile: tests.Dockerfile
+      args:
+        MATOMO_VERSION: ${MATOMO_VERSION:-5.14}
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "/matomo/plugins/AmazonSES/.docker/run-tests.sh"]
+    environment:
+      SUITE: ${SUITE:-all}
+    volumes:
+      - ${MATOMO_SRC:-./.cache/matomo}:/matomo
+      - ./:/matomo/plugins/AmazonSES
+      - composer-cache:/root/.composer/cache
+
+volumes:
+  db:
+  matomo:
+  composer-cache:

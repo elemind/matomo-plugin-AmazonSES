@@ -1,0 +1,79 @@
+name: Plugin AmazonSES Tests
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  standalone-unit:
+    name: Unit tests (standalone, PHP ${{ matrix.php }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.2', '7.4', '8.1', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: curl, json
+          tools: composer:v2
+      - name: Install test dependencies
+        run: |
+          mkdir -p /tmp/deps && cd /tmp/deps
+          if php -r 'exit(PHP_VERSION_ID < 70300 ? 0 : 1);'; then PHPUNIT='^8.5'; else PHPUNIT='^9.6'; fi
+          composer require -q --no-interaction "phpunit/phpunit:$PHPUNIT" "phpmailer/phpmailer:^6.9 || ^7.0"
+      - name: Run unit tests
+        run: AMAZONSES_VENDOR_AUTOLOAD=/tmp/deps/vendor/autoload.php /tmp/deps/vendor/bin/phpunit -c tests/phpunit.standalone.xml
+
+  plugin-tests:
+    name: Matomo ${{ matrix.target }} (PHP ${{ matrix.php }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '7.2'
+            target: minimum_required_matomo
+          - php: '8.4'
+            target: maximum_supported_matomo
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+          persist-credentials: false
+      - uses: matomo-org/github-action-tests@main
+        with:
+          plugin-name: 'AmazonSES'
+          php-version: ${{ matrix.php }}
+          test-type: 'PluginTests'
+          matomo-test-branch: ${{ matrix.target }}
+
+  # Early warning for the upcoming Matomo 6: failures do not block merges.
+  matomo-6-preview:
+    name: Matomo 6.x-dev (allowed to fail)
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Allow Matomo 6 for this run only
+        run: sed -i 's/<6.0.0-b1/<7.0.0-b1/' plugin.json
+      - uses: matomo-org/github-action-tests@main
+        with:
+          plugin-name: 'AmazonSES'
+          php-version: '8.4'
+          test-type: 'PluginTests'
+          matomo-test-branch: '6.x-dev'

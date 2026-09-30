@@ -1,0 +1,11 @@
+.env
+/vendor/
+/node_modules/
+.DS_Store
+.idea/
+.phpunit.result.cache
+/.cache/
+/vue/dist/demo.html
+/vue/dist/*.common.js
+/vue/dist/*.map
+/vue/dist/*.development.*

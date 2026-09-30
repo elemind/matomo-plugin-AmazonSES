@@ -1,0 +1,7 @@
+{% extends 'admin.twig' %}
+
+{% set title %}{{ 'AmazonSES_PageTitle'|translate }}{% endset %}
+
+{% block content %}
+    <div vue-entry="AmazonSES.SesAdmin" default-recipient="{{ defaultRecipient|json_encode }}"></div>
+{% endblock %}

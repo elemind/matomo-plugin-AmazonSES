@@ -1,0 +1,39 @@
+{
+  "name": "AmazonSES",
+  "description": "Send all Matomo emails through the Amazon SES API v2 (HTTPS) with IAM role, environment or access key credentials.",
+  "version": "0.1.0",
+  "theme": false,
+  "require": {
+    "matomo": ">=5.0.0,<6.0.0-b1",
+    "php": ">=7.2.5"
+  },
+  "authors": [
+    {
+      "name": "Elemind",
+      "email": "info@elemind.com",
+      "homepage": "https://github.com/elemind"
+    }
+  ],
+  "support": {
+    "email": "info@elemind.com",
+    "issues": "https://github.com/elemind/matomo-plugin-AmazonSES/issues",
+    "source": "https://github.com/elemind/matomo-plugin-AmazonSES",
+    "docs": "https://github.com/elemind/matomo-plugin-AmazonSES#readme"
+  },
+  "homepage": "https://github.com/elemind/matomo-plugin-AmazonSES",
+  "license": "GPL v3+",
+  "keywords": ["email", "mail", "aws", "amazon", "ses", "smtp", "transport", "iam"],
+  "archive": {
+    "exclude": [
+      "/.docker",
+      "/.github",
+      "/tests",
+      "/vue/src",
+      "/docker-compose.yml",
+      "/Makefile",
+      "/.env.example",
+      "/.gitignore",
+      "/phpcs.xml"
+    ]
+  }
+}
