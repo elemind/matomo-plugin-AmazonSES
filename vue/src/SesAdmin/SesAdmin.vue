@@ -42,12 +42,12 @@
         </table>
       </div>
 
-      <p>
-        <button class="btn btn-flat" @click="loadStatus()" :disabled="isLoadingStatus">
+      <div class="amazonSesActions">
+        <button class="btn" @click="loadStatus()" :disabled="isLoadingStatus">
           {{ translate('AmazonSES_Refresh') }}
         </button>
-        <a :href="settingsUrl" class="btn btn-flat">{{ translate('AmazonSES_SettingsLink') }}</a>
-      </p>
+        <a :href="settingsUrl" class="btn">{{ translate('AmazonSES_SettingsLink') }}</a>
+      </div>
     </ContentBlock>
 
     <ContentBlock :content-title="translate('AmazonSES_TestTitle')">
@@ -173,6 +173,12 @@ export default defineComponent({
 </script>
 
 <style lang="less" scoped>
+.amazonSesActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .amazonSesStatus {
   margin-bottom: 16px;
 
