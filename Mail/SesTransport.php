@@ -96,7 +96,8 @@ class SesTransport extends Transport
         $phpMailer->XMailer = ' ';
         // avoid triggering automated (vacation) responses
         $phpMailer->addCustomHeader('Auto-Submitted', 'yes');
-        PHPMailer::setLanguage(StaticContainer::get('Piwik\Translation\Translator')->getCurrentLanguage());
+        // instance call: setLanguage() is static in PHPMailer 7 but an instance method in PHPMailer 6 (early Matomo 5 releases)
+        $phpMailer->setLanguage(StaticContainer::get('Piwik\Translation\Translator')->getCurrentLanguage());
 
         $phpMailer->Subject = $mail->getSubject();
 
