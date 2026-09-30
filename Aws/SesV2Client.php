@@ -14,10 +14,9 @@ use Piwik\Plugins\AmazonSES\Aws\Http\HttpClient;
 use Piwik\Plugins\AmazonSES\Aws\Http\HttpResponse;
 
 /**
- * Tiny client for the two SES v2 operations the plugin needs.
+ * Tiny client for the SES v2 SendEmail operation.
  *
  * @see https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_SendEmail.html
- * @see https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_GetAccount.html
  */
 class SesV2Client
 {
@@ -116,14 +115,6 @@ class SesV2Client
         }
 
         return (string) $data['MessageId'];
-    }
-
-    /**
-     * @return array<string, mixed> raw GetAccount response (ProductionAccessEnabled, SendQuota, SendingEnabled, ...)
-     */
-    public function getAccount(): array
-    {
-        return $this->call('GET', '/v2/email/account');
     }
 
     /**

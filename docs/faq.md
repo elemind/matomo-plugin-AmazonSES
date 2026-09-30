@@ -12,7 +12,7 @@ __I get "Email address is not verified".__
 
 Amazon SES only sends from verified identities. Verify the sender address, or better its whole domain, in the SES console of the **same region** configured in the plugin. Then either use that address as Matomo's noreply address or set it as *Sender email* in the plugin settings.
 
-In sandbox mode the **recipients** must be verified too. The status page shows whether your account is still in the sandbox; request production access in the SES console to email any user.
+In sandbox mode the **recipients** must be verified too, and if your IAM policy restricts `Resource` to specific identities, the recipients must be listed there as well. Request production access in the SES console to email any user.
 
 __Where do the credentials come from?__
 

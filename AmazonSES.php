@@ -22,9 +22,8 @@ class AmazonSES extends \Piwik\Plugin
     {
         $keys = [
             'PageTitle', 'StatusTitle', 'Region', 'Endpoint', 'CredentialsSource', 'ConfigurationSet', 'Sender',
-            'None', 'Sandbox', 'SandboxYes', 'SandboxNo', 'SendingEnabled', 'Quota24h', 'MaxSendRate', 'SentLast24h',
-            'TestTitle', 'TestRecipient', 'TestRecipientHelp', 'SendTest', 'TestSent', 'SettingsLink', 'Refresh',
-            'EmailsDisabled', 'SandboxHelp',
+            'None', 'TestTitle', 'TestRecipient', 'TestRecipientHelp', 'SendTest', 'TestSent', 'SettingsLink',
+            'Refresh', 'EmailsDisabled',
         ];
         foreach ($keys as $key) {
             $translationKeys[] = 'AmazonSES_' . $key;

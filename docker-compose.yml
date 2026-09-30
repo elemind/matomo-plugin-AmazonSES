@@ -20,14 +20,6 @@ services:
   ses-mock:
     image: node:22-alpine
     command: ["npx", "-y", "aws-ses-v2-local@2.10.2", "--host", "0.0.0.0", "--port", "8005"]
-    environment:
-      # fake account returned by GetAccount (sandbox mode, 200 emails / 24h)
-      AWS_SES_ACCOUNT: >-
-        {"DedicatedIpAutoWarmupEnabled":false,"Details":{"AdditionalContactEmailAddresses":[],"ContactLanguage":"EN",
-        "MailType":"TRANSACTIONAL","ReviewDetails":{"CaseId":"mock","Status":"PENDING"},"UseCaseDescription":"mock",
-        "WebsiteURL":"http://localhost:8080"},"EnforcementStatus":"HEALTHY","ProductionAccessEnabled":false,
-        "SendingEnabled":true,"SendQuota":{"Max24HourSend":200,"MaxSendRate":1,"SentLast24Hours":0},
-        "SuppressionAttributes":{"SuppressedReasons":["BOUNCE","COMPLAINT"]}}
     ports:
       - "8005:8005"
 

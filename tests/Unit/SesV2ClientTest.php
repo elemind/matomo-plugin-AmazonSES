@@ -115,23 +115,11 @@ class SesV2ClientTest extends TestCase
         $this->http->queue(new HttpResponse(403, [], '{"__type":"com.amazon.coral.service#UnrecognizedClientException","message":"The security token included in the request is invalid."}'));
 
         try {
-            $this->client()->getAccount();
+            $this->client()->sendRawEmail('raw', ['a@example.com']);
             $this->fail('Expected exception');
         } catch (AwsException $e) {
             $this->assertSame('UnrecognizedClientException', $e->getAwsErrorCode());
         }
-    }
-
-    public function testGetAccount()
-    {
-        $this->http->queue(new HttpResponse(200, [], '{"ProductionAccessEnabled":false,"SendQuota":{"Max24HourSend":200,"MaxSendRate":1,"SentLast24Hours":3}}'));
-
-        $account = $this->client()->getAccount();
-
-        $this->assertSame('GET', $this->http->requests[0]['method']);
-        $this->assertSame('https://email.eu-west-1.amazonaws.com/v2/email/account', $this->http->requests[0]['url']);
-        $this->assertFalse($account['ProductionAccessEnabled']);
-        $this->assertSame(200, $account['SendQuota']['Max24HourSend']);
     }
 
     public function testInvalidRegionIsRejected()

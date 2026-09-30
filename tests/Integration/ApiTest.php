@@ -11,7 +11,6 @@ namespace Piwik\Plugins\AmazonSES\tests\Integration;
 
 use Piwik\Container\StaticContainer;
 use Piwik\Plugins\AmazonSES\API;
-use Piwik\Plugins\AmazonSES\Aws\Http\HttpResponse;
 use Piwik\Plugins\AmazonSES\Mail\SesTransport;
 use Piwik\Plugins\AmazonSES\SesClientFactory;
 use Piwik\Plugins\AmazonSES\tests\Framework\TestSesClientFactory;
@@ -39,31 +38,28 @@ class ApiTest extends IntegrationTestCase
         $this->assertInstanceOf(SesTransport::class, StaticContainer::get('Piwik\Mail\Transport'));
     }
 
-    public function testGetStatus()
+    public function testGetStatusMakesNoAwsCall()
     {
-        $this->factory->http->queue(new HttpResponse(200, [], json_encode([
-            'ProductionAccessEnabled' => false,
-            'SendingEnabled' => true,
-            'SendQuota' => ['Max24HourSend' => 200, 'MaxSendRate' => 1, 'SentLast24Hours' => 5],
-        ])));
-
         $status = API::getInstance()->getStatus();
 
         $this->assertSame('eu-west-1', $status['region']);
         $this->assertSame('settings', $status['credentialsSource']);
         $this->assertNull($status['error']);
-        $this->assertFalse($status['account']['productionAccessEnabled']);
-        $this->assertSame(5, $status['account']['sentLast24Hours']);
+        $this->assertArrayNotHasKey('account', $status);
+        $this->assertEmpty($this->factory->http->requests);
     }
 
-    public function testGetStatusReportsErrorsInsteadOfThrowing()
+    public function testGetStatusReportsMissingCredentials()
     {
-        $this->factory->http->queue(new HttpResponse(403, [], '{"message":"The security token included in the request is invalid."}'));
+        StaticContainer::getContainer()->set(SesClientFactory::class, new TestSesClientFactory([
+            'accessKeyId' => '',
+            'secretAccessKey' => '',
+        ]));
 
-        $status = API::getInstance()->getStatus();
+        $status = (new API(StaticContainer::get(SesClientFactory::class)))->getStatus();
 
-        $this->assertNull($status['account']);
-        $this->assertStringContainsString('security token', $status['error']);
+        $this->assertNull($status['credentialsSource']);
+        $this->assertStringContainsString('No AWS credentials found', $status['error']);
     }
 
     public function testSendTestEmailRejectsInvalidRecipient()

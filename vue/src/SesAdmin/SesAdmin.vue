@@ -15,12 +15,6 @@
         <div class="alert alert-warning" v-if="!status.emailsEnabled">
           {{ translate('AmazonSES_EmailsDisabled') }}
         </div>
-        <div
-          class="alert alert-warning"
-          v-if="status.account && !status.account.productionAccessEnabled"
-        >
-          {{ translate('AmazonSES_SandboxHelp') }}
-        </div>
 
         <table class="entityTable amazonSesStatus">
           <tbody>
@@ -44,30 +38,6 @@
               <td>{{ translate('AmazonSES_ConfigurationSet') }}</td>
               <td>{{ status.configurationSet || translate('AmazonSES_None') }}</td>
             </tr>
-            <template v-if="status.account">
-              <tr>
-                <td>{{ translate('AmazonSES_Sandbox') }}</td>
-                <td>
-                  {{ status.account.productionAccessEnabled
-                    ? translate('AmazonSES_SandboxNo')
-                    : translate('AmazonSES_SandboxYes') }}
-                </td>
-              </tr>
-              <tr>
-                <td>{{ translate('AmazonSES_SendingEnabled') }}</td>
-                <td>
-                  {{ status.account.sendingEnabled ? translate('General_Yes') : translate('General_No') }}
-                </td>
-              </tr>
-              <tr>
-                <td>{{ translate('AmazonSES_Quota24h') }}</td>
-                <td>{{ status.account.sentLast24Hours }} / {{ status.account.max24HourSend }}</td>
-              </tr>
-              <tr>
-                <td>{{ translate('AmazonSES_MaxSendRate') }}</td>
-                <td>{{ status.account.maxSendRate }}</td>
-              </tr>
-            </template>
           </tbody>
         </table>
       </div>
@@ -112,15 +82,6 @@ import {
 } from 'CoreHome';
 import { Field } from 'CorePluginsAdmin';
 
-interface AccountStatus {
-  productionAccessEnabled: boolean;
-  sendingEnabled: boolean;
-  enforcementStatus: string;
-  max24HourSend: number | null;
-  maxSendRate: number | null;
-  sentLast24Hours: number | null;
-}
-
 interface Status {
   region: string;
   endpoint: string | null;
@@ -128,7 +89,6 @@ interface Status {
   senderEmail: string;
   emailsEnabled: boolean;
   credentialsSource: string | null;
-  account: AccountStatus | null;
   error: string | null;
 }
 

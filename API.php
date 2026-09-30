@@ -33,7 +33,8 @@ class API extends \Piwik\Plugin\API
     }
 
     /**
-     * Returns the effective configuration (without secrets), the resolved credentials source and the SES account state.
+     * Returns the effective configuration (without secrets) and the resolved credentials source.
+     * No call is made to Amazon SES, so it works with IAM policies that only allow sending.
      *
      * @return array
      */
@@ -49,24 +50,11 @@ class API extends \Piwik\Plugin\API
             'senderEmail' => $config->getSenderEmail() ?: Config::getInstance()->General['noreply_email_address'],
             'emailsEnabled' => (bool) (Config::getInstance()->General['emails_enabled'] ?? true),
             'credentialsSource' => null,
-            'account' => null,
             'error' => null,
         ];
 
         try {
-            $credentials = $this->factory->getCredentialChain()->resolveOrFail();
-            $status['credentialsSource'] = $credentials->getSource();
-
-            $account = $this->factory->createClient()->getAccount();
-            $quota = $account['SendQuota'] ?? [];
-            $status['account'] = [
-                'productionAccessEnabled' => (bool) ($account['ProductionAccessEnabled'] ?? false),
-                'sendingEnabled' => (bool) ($account['SendingEnabled'] ?? true),
-                'enforcementStatus' => (string) ($account['EnforcementStatus'] ?? ''),
-                'max24HourSend' => $quota['Max24HourSend'] ?? null,
-                'maxSendRate' => $quota['MaxSendRate'] ?? null,
-                'sentLast24Hours' => $quota['SentLast24Hours'] ?? null,
-            ];
+            $status['credentialsSource'] = $this->factory->getCredentialChain()->resolveOrFail()->getSource();
         } catch (AwsException $e) {
             $status['error'] = $e->getMessage();
         }

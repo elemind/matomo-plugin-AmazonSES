@@ -14,7 +14,7 @@ The plugin replaces the Matomo mail transport. Scheduled reports (including PDF 
 * Credentials are resolved in this order: the plugin settings, the `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` environment variables, the **ECS task role**, then the **EC2 instance profile** (IMDSv2).
 * Optional sender override, for an address or domain verified in SES.
 * Optional **configuration set**, so you can publish bounces, complaints and deliveries to SNS, CloudWatch or EventBridge.
-* An admin page (*Administration → System → Amazon SES*) with the account status (sandbox, 24h quota, send rate) and a **Send test email** button.
+* An admin page (*Administration → System → Amazon SES*) with the effective configuration (region, credentials source, sender) and a **Send test email** button. It makes no AWS call besides sending, so an IAM policy that only allows sending is enough.
 * Every setting can also be set in `config.ini.php` for container and infrastructure-as-code deployments.
 * Errors are never hidden. If SES rejects a message, Matomo logs the exact AWS error; there is no silent fallback to SMTP.
 
@@ -68,17 +68,12 @@ The standard AWS environment variables are also supported: `AWS_REGION`, `AWS_DE
       "Effect": "Allow",
       "Action": ["ses:SendEmail", "ses:SendRawEmail"],
       "Resource": "*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": ["ses:GetAccount"],
-      "Resource": "*"
     }
   ]
 }
 ```
 
-`ses:GetAccount` is only used by the status page. You can restrict `Resource` to your identity and configuration set ARNs.
+These are the only permissions the plugin needs. You can restrict `Resource` to your identity and configuration set ARNs. While the account is in the SES sandbox, SES also checks the permission against the **recipient** identities, so they must be verified and covered by `Resource`.
 
 ### Security notes
 
