@@ -12,6 +12,9 @@
 
       <div v-if="status">
         <div class="alert alert-danger" v-if="status.error">{{ status.error }}</div>
+        <div class="alert alert-warning" v-if="status.smtpHost">
+          {{ translate('AmazonSES_SmtpIgnored', status.smtpHost) }}
+        </div>
         <div class="alert alert-warning" v-if="!status.emailsEnabled">
           {{ translate('AmazonSES_EmailsDisabled') }}
         </div>
@@ -89,6 +92,7 @@ interface Status {
   senderEmail: string;
   emailsEnabled: boolean;
   credentialsSource: string | null;
+  smtpHost: string | null;
   error: string | null;
 }
 

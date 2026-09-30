@@ -36,6 +36,7 @@
         "SettingSenderEmail": "Email mittente (opzionale)",
         "SettingSenderEmailHelp": "Sostituisce l'indirizzo 'from' di Matomo. Deve essere un'identità verificata (indirizzo o dominio) in Amazon SES. Lascia vuoto per usare l'indirizzo noreply di Matomo.",
         "SettingSenderName": "Nome mittente (opzionale)",
-        "SettingSenderNameHelp": "Sostituisce il nome 'from' di Matomo."
+        "SettingSenderNameHelp": "Sostituisce il nome 'from' di Matomo.",
+        "SmtpIgnored": "Nelle impostazioni generali è configurato un server SMTP (%s): viene ignorato finché il plugin AmazonSES è attivo. Di quel form vengono usati solo indirizzo e nome del mittente."
     }
 }

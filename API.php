@@ -50,6 +50,7 @@ class API extends \Piwik\Plugin\API
             'senderEmail' => $config->getSenderEmail() ?: Config::getInstance()->General['noreply_email_address'],
             'emailsEnabled' => (bool) (Config::getInstance()->General['emails_enabled'] ?? true),
             'credentialsSource' => null,
+            'smtpHost' => $this->getIgnoredSmtpHost(),
             'error' => null,
         ];
 
@@ -60,6 +61,19 @@ class API extends \Piwik\Plugin\API
         }
 
         return $status;
+    }
+
+    /**
+     * The SMTP server configured in the core mail settings, if any: it is not used while this plugin is active.
+     */
+    private function getIgnoredSmtpHost(): ?string
+    {
+        $mail = Config::getInstance()->mail;
+        if (!is_array($mail) || ($mail['transport'] ?? '') !== 'smtp' || trim((string) ($mail['host'] ?? '')) === '') {
+            return null;
+        }
+
+        return trim((string) $mail['host']);
     }
 
     /**

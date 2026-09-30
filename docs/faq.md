@@ -4,9 +4,13 @@ __Which emails are sent through Amazon SES?__
 
 All of them. The plugin replaces the Matomo mail transport, so scheduled reports, alerts, password resets, invitations and emails sent by other plugins all go through SES while the plugin is activated.
 
-__Do I still need to configure SMTP in the general settings?__
+__What happens if an SMTP server is also configured?__
 
-No. Once the plugin is active, the SMTP settings under *General settings → Email server settings* are ignored. Deactivate the plugin to use them again.
+Amazon SES always wins while the plugin is active: Matomo uses a single mail transport, and the plugin replaces the core SMTP / `mail()` transport. The host, port, username, password and encryption set under *General settings → Email server settings* are ignored, and no email is sent twice. The *Amazon SES* admin page shows a warning when an SMTP server is configured.
+
+The **sender address and name** from that same form are still used: they are Matomo's noreply address and name, and the plugin uses them unless you set *Sender email / Sender name* in the plugin settings.
+
+If Amazon SES fails, the plugin does **not** fall back to SMTP. Deactivate the plugin to go back to SMTP; no other change is needed.
 
 __I get "Email address is not verified".__
 

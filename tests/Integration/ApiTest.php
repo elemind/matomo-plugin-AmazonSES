@@ -9,6 +9,7 @@
 
 namespace Piwik\Plugins\AmazonSES\tests\Integration;
 
+use Piwik\Config;
 use Piwik\Container\StaticContainer;
 use Piwik\Plugins\AmazonSES\API;
 use Piwik\Plugins\AmazonSES\Mail\SesTransport;
@@ -47,6 +48,16 @@ class ApiTest extends IntegrationTestCase
         $this->assertNull($status['error']);
         $this->assertArrayNotHasKey('account', $status);
         $this->assertEmpty($this->factory->http->requests);
+    }
+
+    public function testGetStatusWarnsAboutIgnoredSmtpServer()
+    {
+        $this->assertNull(API::getInstance()->getStatus()['smtpHost']);
+
+        Config::getInstance()->mail['transport'] = 'smtp';
+        Config::getInstance()->mail['host'] = 'smtp.example.com';
+
+        $this->assertSame('smtp.example.com', API::getInstance()->getStatus()['smtpHost']);
     }
 
     public function testGetStatusReportsMissingCredentials()
