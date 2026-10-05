@@ -52,6 +52,9 @@ class CurlHttpClient implements HttpClient
             CURLOPT_CONNECTTIMEOUT_MS => (int) (min($timeout, 5) * 1000),
             CURLOPT_TIMEOUT_MS => (int) ($timeout * 1000),
             CURLOPT_FOLLOWLOCATION => false,
+            // never let a configured URL reach file://, gopher:// and the like
+            CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+            CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_HEADERFUNCTION => function ($ch, string $line) use (&$responseHeaders) {
