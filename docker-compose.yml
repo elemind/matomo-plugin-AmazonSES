@@ -42,6 +42,8 @@ services:
       # Defaults target the local SES mock; override them in .env to use real Amazon SES.
       AWS_REGION: ${AWS_REGION:-eu-west-1}
       AWS_ENDPOINT_URL_SESV2: ${AWS_ENDPOINT_URL_SESV2-http://ses-mock:8005}
+      # the mock only speaks plain HTTP; the plugin rejects http:// endpoints unless this is set
+      AMAZONSES_ALLOW_INSECURE_ENDPOINT: ${AMAZONSES_ALLOW_INSECURE_ENDPOINT-1}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-AKIAMOCKMOCKMOCKMOCK}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-mock-secret}
       AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}

@@ -54,9 +54,13 @@ configurationSet = "matomo"
 ; advanced, only available here: custom endpoint (VPC endpoint, local mock) and HTTP timeout in seconds
 ;endpoint = "https://vpce-xxxx.email.eu-west-1.vpce.amazonaws.com"
 ;timeout = 15
+; local SES mock only: accept a plain http:// endpoint (credentials and emails would travel unencrypted)
+;allowInsecureEndpoint = 1
 ```
 
-The standard AWS environment variables are also supported: `AWS_REGION`, `AWS_DEFAULT_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, `AWS_ENDPOINT_URL_SESV2`, `AWS_ENDPOINT_URL`, `AWS_CONTAINER_CREDENTIALS_RELATIVE_URI`/`FULL_URI` and `AWS_EC2_METADATA_DISABLED`.
+A custom endpoint must use `https://` and cannot contain credentials, a query string or a fragment. Plain `http://` is rejected unless `allowInsecureEndpoint = 1` (or `AMAZONSES_ALLOW_INSECURE_ENDPOINT=1`) is set, which is meant for a local SES mock only.
+
+The standard AWS environment variables are also supported: `AWS_REGION`, `AWS_DEFAULT_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, `AWS_ENDPOINT_URL_SESV2`, `AWS_ENDPOINT_URL`, `AMAZONSES_ALLOW_INSECURE_ENDPOINT`, `AWS_CONTAINER_CREDENTIALS_RELATIVE_URI`/`FULL_URI` and `AWS_EC2_METADATA_DISABLED`.
 
 ### IAM policy
 

@@ -39,7 +39,7 @@ Create an SES *configuration set* with an event destination (SNS, CloudWatch, Ev
 
 __Can I use a VPC endpoint or a local SES mock?__
 
-Yes. Set `endpoint` in the `[AmazonSES]` section of `config.ini.php`, or set the `AWS_ENDPOINT_URL_SESV2` environment variable.
+Yes. Set `endpoint` in the `[AmazonSES]` section of `config.ini.php`, or set the `AWS_ENDPOINT_URL_SESV2` environment variable. The endpoint must use `https://`. A local mock that only speaks plain `http://` also needs `allowInsecureEndpoint = 1` (or `AMAZONSES_ALLOW_INSECURE_ENDPOINT=1`): never enable it for a remote host, as AWS credentials and email contents would travel unencrypted.
 
 __Does it work behind an HTTP proxy?__
 

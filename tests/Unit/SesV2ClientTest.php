@@ -32,13 +32,14 @@ class SesV2ClientTest extends TestCase
         $this->http = new FakeHttpClient();
     }
 
-    private function client(?string $endpoint = null): SesV2Client
+    private function client(?string $endpoint = null, bool $allowInsecureEndpoint = false): SesV2Client
     {
         return new SesV2Client(
             new CredentialProviderChain([new StaticProvider('AKIDEXAMPLE', 'secret')]),
             $this->http,
             'eu-west-1',
-            $endpoint
+            $endpoint,
+            $allowInsecureEndpoint
         );
     }
 
@@ -86,9 +87,65 @@ class SesV2ClientTest extends TestCase
     {
         $this->http->queue(new HttpResponse(200, [], '{"MessageId":"x"}'));
 
-        $this->client('http://ses-mock:8005/')->sendRawEmail('raw', ['a@example.com']);
+        $client = $this->client('https://vpce-1.email.eu-west-1.vpce.amazonaws.com:8443/prefix/');
+        $client->sendRawEmail('raw', ['a@example.com']);
 
+        $this->assertTrue($client->isEndpointEncrypted());
+        $this->assertSame(
+            'https://vpce-1.email.eu-west-1.vpce.amazonaws.com:8443/prefix/v2/email/outbound-emails',
+            $this->http->requests[0]['url']
+        );
+    }
+
+    public function testPlainHttpEndpointIsRejectedByDefault()
+    {
+        try {
+            $this->client('http://ses-mock:8005');
+            $this->fail('Expected exception');
+        } catch (AwsException $e) {
+            $this->assertSame('InvalidEndpoint', $e->getAwsErrorCode());
+            $this->assertStringContainsString('allowInsecureEndpoint', $e->getMessage());
+            $this->assertStringNotContainsString('ses-mock', $e->getMessage());
+        }
+    }
+
+    public function testPlainHttpEndpointCanBeAllowedExplicitly()
+    {
+        $this->http->queue(new HttpResponse(200, [], '{"MessageId":"x"}'));
+
+        $client = $this->client('http://ses-mock:8005/', true);
+        $client->sendRawEmail('raw', ['a@example.com']);
+
+        $this->assertFalse($client->isEndpointEncrypted());
         $this->assertSame('http://ses-mock:8005/v2/email/outbound-emails', $this->http->requests[0]['url']);
+    }
+
+    public function provideInvalidEndpoints(): array
+    {
+        return [
+            'credentials' => ['https://AKIA:s3cr3t@ses.example.com'],
+            'user only' => ['https://s3cr3t@ses.example.com'],
+            'query' => ['https://ses.example.com/?s3cr3t=1'],
+            'fragment' => ['https://ses.example.com/#s3cr3t'],
+            'no scheme' => ['ses.example.com/s3cr3t'],
+            'no host' => ['https:///s3cr3t'],
+            'other scheme' => ['ftp://ses.example.com/s3cr3t'],
+            'file' => ['file:///etc/s3cr3t'],
+        ];
+    }
+
+    /**
+     * @dataProvider provideInvalidEndpoints
+     */
+    public function testInvalidEndpointIsRejectedWithoutEchoingIt(string $endpoint)
+    {
+        try {
+            $this->client($endpoint, true);
+            $this->fail('Expected exception');
+        } catch (AwsException $e) {
+            $this->assertSame('InvalidEndpoint', $e->getAwsErrorCode());
+            $this->assertStringNotContainsString('s3cr3t', $e->getMessage());
+        }
     }
 
     public function testAwsErrorIsMappedToException()

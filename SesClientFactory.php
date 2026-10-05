@@ -46,7 +46,8 @@ class SesClientFactory
             $this->getCredentialChain(),
             $http,
             $this->config->getRegion(),
-            $this->config->getEndpoint()
+            $this->config->getEndpoint(),
+            $this->config->allowsInsecureEndpoint()
         );
     }
 

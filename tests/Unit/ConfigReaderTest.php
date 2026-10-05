@@ -33,6 +33,7 @@ class ConfigReaderTest extends TestCase
         $this->assertNull($reader->getEndpoint());
         $this->assertSame(15.0, $reader->getTimeout());
         $this->assertSame('', $reader->getSenderEmail());
+        $this->assertFalse($reader->allowsInsecureEndpoint());
     }
 
     public function testRegionFallsBackToEnvironment()
@@ -52,6 +53,23 @@ class ConfigReaderTest extends TestCase
         $this->assertSame('http://ini', $this->reader(['endpoint' => 'http://ini'], [
             'AWS_ENDPOINT_URL_SESV2' => 'http://sesv2',
         ])->getEndpoint());
+    }
+
+    public function testAllowInsecureEndpoint()
+    {
+        foreach (['1', 'true', 'Yes', ' on '] as $value) {
+            $this->assertTrue($this->reader(['allowInsecureEndpoint' => $value])->allowsInsecureEndpoint(), $value);
+        }
+        foreach (['0', 'false', 'no', 'whatever'] as $value) {
+            $this->assertFalse($this->reader(['allowInsecureEndpoint' => $value])->allowsInsecureEndpoint(), $value);
+        }
+
+        $this->assertTrue($this->reader([], ['AMAZONSES_ALLOW_INSECURE_ENDPOINT' => '1'])->allowsInsecureEndpoint());
+        // config.ini.php wins over the environment
+        $this->assertFalse($this->reader(
+            ['allowInsecureEndpoint' => '0'],
+            ['AMAZONSES_ALLOW_INSECURE_ENDPOINT' => '1']
+        )->allowsInsecureEndpoint());
     }
 
     public function testValuesAreTrimmed()

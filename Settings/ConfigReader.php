@@ -97,6 +97,19 @@ class ConfigReader
         return $endpoint !== '' ? $endpoint : null;
     }
 
+    /**
+     * Whether a plain http:// custom endpoint is accepted (local SES mock). Only settable via config.ini.php or environment.
+     */
+    public function allowsInsecureEndpoint(): bool
+    {
+        $value = trim((string) ($this->section['allowInsecureEndpoint'] ?? ''));
+        if ($value === '') {
+            $value = $this->env('AMAZONSES_ALLOW_INSECURE_ENDPOINT');
+        }
+
+        return in_array(strtolower($value), ['1', 'true', 'yes', 'on'], true);
+    }
+
     public function getTimeout(): float
     {
         $timeout = (float) ($this->section['timeout'] ?? 0);

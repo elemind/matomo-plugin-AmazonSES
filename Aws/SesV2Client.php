@@ -44,11 +44,17 @@ class SesV2Client
         CredentialProviderChain $credentials,
         HttpClient $http,
         string $region,
+        #[\SensitiveParameter]
         ?string $endpoint = null,
+        bool $allowInsecureEndpoint = false,
         ?callable $clock = null
     ) {
         if (!preg_match('/^[a-z]{2}(-[a-z]+)+-\d+$/', $region)) {
             throw new AwsException(sprintf('Invalid AWS region "%s".', $region), 'InvalidRegion');
+        }
+
+        if ($endpoint !== null && $endpoint !== '') {
+            self::assertValidEndpoint($endpoint, $allowInsecureEndpoint);
         }
 
         $this->credentials = $credentials;
@@ -66,6 +72,45 @@ class SesV2Client
     public function getEndpoint(): string
     {
         return $this->endpoint;
+    }
+
+    public function isEndpointEncrypted(): bool
+    {
+        return stripos($this->endpoint, 'https://') === 0;
+    }
+
+    /**
+     * Signed requests and email contents travel to this URL, so plain HTTP is only accepted when explicitly allowed
+     * (local SES mock). The URL is never part of the error message: it could embed credentials.
+     */
+    private static function assertValidEndpoint(
+        #[\SensitiveParameter]
+        string $endpoint,
+        bool $allowInsecure
+    ): void {
+        $parts = parse_url($endpoint);
+        if (!is_array($parts) || empty($parts['scheme']) || empty($parts['host'])) {
+            throw new AwsException('The custom Amazon SES endpoint is not a valid URL.', 'InvalidEndpoint');
+        }
+
+        $scheme = strtolower($parts['scheme']);
+        if ($scheme !== 'https' && !($scheme === 'http' && $allowInsecure)) {
+            throw new AwsException(
+                'The custom Amazon SES endpoint must use https://. Plain http:// is only accepted for a local SES mock,'
+                . ' with allowInsecureEndpoint = 1 in the [AmazonSES] section of config.ini.php'
+                . ' or the AMAZONSES_ALLOW_INSECURE_ENDPOINT=1 environment variable.',
+                'InvalidEndpoint'
+            );
+        }
+
+        foreach (['user', 'pass', 'query', 'fragment'] as $forbidden) {
+            if (array_key_exists($forbidden, $parts)) {
+                throw new AwsException(
+                    'The custom Amazon SES endpoint must not contain credentials, a query string or a fragment.',
+                    'InvalidEndpoint'
+                );
+            }
+        }
     }
 
     /**
