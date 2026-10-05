@@ -11,7 +11,11 @@
       <ActivityIndicator :loading="isLoadingStatus" />
 
       <div v-if="status">
+        <div class="alert alert-danger" v-if="status.configError">{{ status.configError }}</div>
         <div class="alert alert-danger" v-if="status.error">{{ status.error }}</div>
+        <div class="alert alert-warning" v-if="status.insecureEndpoint">
+          {{ translate('AmazonSES_InsecureEndpoint') }}
+        </div>
         <div class="alert alert-warning" v-if="status.smtpHost">
           {{ translate('AmazonSES_SmtpIgnored', status.smtpHost) }}
         </div>
@@ -93,6 +97,8 @@ interface Status {
   emailsEnabled: boolean;
   credentialsSource: string | null;
   smtpHost: string | null;
+  insecureEndpoint: boolean;
+  configError: string | null;
   error: string | null;
 }
 

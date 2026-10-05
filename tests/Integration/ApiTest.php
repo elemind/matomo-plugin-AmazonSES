@@ -73,6 +73,50 @@ class ApiTest extends IntegrationTestCase
         $this->assertStringContainsString('No AWS credentials found', $status['error']);
     }
 
+    public function testGetStatusReportsInvalidEndpointWithoutShowingIt()
+    {
+        $status = $this->statusWith(['endpoint' => 'https://AKIA:s3cr3t@ses.example.com']);
+
+        $this->assertNull($status['endpoint']);
+        $this->assertStringContainsString('must not contain credentials', $status['configError']);
+        $this->assertStringNotContainsString('s3cr3t', $status['configError']);
+        $this->assertFalse($status['insecureEndpoint']);
+    }
+
+    public function testGetStatusRejectsPlainHttpEndpointByDefault()
+    {
+        $status = $this->statusWith(['endpoint' => 'http://ses-mock:8005']);
+
+        $this->assertNull($status['endpoint']);
+        $this->assertStringContainsString('allowInsecureEndpoint', $status['configError']);
+    }
+
+    public function testGetStatusWarnsAboutAllowedPlainHttpEndpoint()
+    {
+        $status = $this->statusWith(['endpoint' => 'http://ses-mock:8005', 'allowInsecureEndpoint' => '1']);
+
+        $this->assertSame('http://ses-mock:8005', $status['endpoint']);
+        $this->assertNull($status['configError']);
+        $this->assertTrue($status['insecureEndpoint']);
+        $this->assertEmpty($this->factory->http->requests);
+    }
+
+    public function testGetStatusWithDefaultEndpointIsEncrypted()
+    {
+        $status = API::getInstance()->getStatus();
+
+        $this->assertNull($status['configError']);
+        $this->assertFalse($status['insecureEndpoint']);
+    }
+
+    private function statusWith(array $config): array
+    {
+        $this->factory = new TestSesClientFactory($config);
+        StaticContainer::getContainer()->set(SesClientFactory::class, $this->factory);
+
+        return (new API($this->factory))->getStatus();
+    }
+
     public function testSendTestEmailRejectsInvalidRecipient()
     {
         $this->expectException(\Exception::class);

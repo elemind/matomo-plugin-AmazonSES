@@ -51,8 +51,20 @@ class API extends \Piwik\Plugin\API
             'emailsEnabled' => (bool) (Config::getInstance()->General['emails_enabled'] ?? true),
             'credentialsSource' => null,
             'smtpHost' => $this->getIgnoredSmtpHost(),
+            'insecureEndpoint' => false,
+            'configError' => null,
             'error' => null,
         ];
+
+        try {
+            // validates region and endpoint without any network call
+            $client = $this->factory->createClient();
+            $status['insecureEndpoint'] = !$client->isEndpointEncrypted();
+        } catch (AwsException $e) {
+            // never show a rejected endpoint: it may embed credentials
+            $status['endpoint'] = null;
+            $status['configError'] = $e->getMessage();
+        }
 
         try {
             $status['credentialsSource'] = $this->factory->getCredentialChain()->resolveOrFail()->getSource();

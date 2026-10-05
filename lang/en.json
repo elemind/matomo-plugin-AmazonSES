@@ -37,6 +37,7 @@
         "SettingSenderEmailHelp": "Overrides the Matomo 'from' address. It must be a verified identity (address or domain) in Amazon SES. Leave empty to use the Matomo noreply address.",
         "SettingSenderName": "Sender name (optional)",
         "SettingSenderNameHelp": "Overrides the Matomo 'from' name.",
-        "SmtpIgnored": "An SMTP server is configured in the general settings (%s): it is ignored while the AmazonSES plugin is active. Only the sender address and name from that form are still used."
+        "SmtpIgnored": "An SMTP server is configured in the general settings (%s): it is ignored while the AmazonSES plugin is active. Only the sender address and name from that form are still used.",
+        "InsecureEndpoint": "The custom endpoint uses plain HTTP (allowInsecureEndpoint is enabled): AWS credentials and email contents travel unencrypted. Use it only for a local SES mock."
     }
 }
