@@ -12,6 +12,7 @@ namespace Piwik\Plugins\AmazonSES\tests\Integration;
 use Piwik\Config;
 use Piwik\Container\StaticContainer;
 use Piwik\Plugins\AmazonSES\API;
+use Piwik\Plugins\AmazonSES\Controller;
 use Piwik\Plugins\AmazonSES\Mail\SesTransport;
 use Piwik\Plugins\AmazonSES\SesClientFactory;
 use Piwik\Plugins\AmazonSES\tests\Framework\TestSesClientFactory;
@@ -125,14 +126,63 @@ class ApiTest extends IntegrationTestCase
         API::getInstance()->sendTestEmail('not-an-email');
     }
 
-    public function testRequiresSuperUser()
+    public function provideNonSuperUsers(): array
     {
-        FakeAccess::$superUser = false;
-        FakeAccess::$idSitesAdmin = [1];
+        $calls = [
+            'getStatus' => function () {
+                return API::getInstance()->getStatus();
+            },
+            'sendTestEmail' => function () {
+                return API::getInstance()->sendTestEmail('admin@example.com');
+            },
+            'Controller::index' => function () {
+                return StaticContainer::get(Controller::class)->index();
+            },
+        ];
+        $users = [
+            'site admin' => function () {
+                FakeAccess::clearAccess(false, [1], [], 'siteAdmin');
+            },
+            'view only' => function () {
+                FakeAccess::clearAccess(false, [], [1], 'viewer');
+            },
+            'anonymous' => function () {
+                FakeAccess::clearAccess(false, [], [], 'anonymous');
+            },
+        ];
+
+        $cases = [];
+        foreach ($calls as $callName => $call) {
+            foreach ($users as $userName => $user) {
+                $cases[$callName . ' as ' . $userName] = [$user, $call];
+            }
+        }
+
+        return $cases;
+    }
+
+    /**
+     * @dataProvider provideNonSuperUsers
+     */
+    public function testRequiresSuperUser(callable $setUser, callable $call)
+    {
+        $setUser();
 
         $this->expectException(\Piwik\NoAccessException::class);
 
-        API::getInstance()->getStatus();
+        $call();
+    }
+
+    public function testSendTestEmailDoesNotSendForNonSuperUser()
+    {
+        FakeAccess::clearAccess(false, [1], [], 'siteAdmin');
+
+        try {
+            API::getInstance()->sendTestEmail('admin@example.com');
+            $this->fail('Expected NoAccessException');
+        } catch (\Piwik\NoAccessException $e) {
+            $this->assertEmpty($this->factory->http->requests);
+        }
     }
 
     public function provideContainerConfig()
