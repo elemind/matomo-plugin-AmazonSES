@@ -1,5 +1,12 @@
 ## Changelog
 
+### 0.1.1 - 2026-10-05
+
+* Security: a custom SES endpoint must now use `https://`. Plain `http://` sent the AWS-signed requests and the email contents unencrypted; it is now rejected unless `allowInsecureEndpoint = 1` (or `AMAZONSES_ALLOW_INSECURE_ENDPOINT=1`) is set, which is meant for a local SES mock only. Endpoints with credentials, a query string or a fragment are rejected too.
+* Security: HTTP requests are restricted to the HTTP and HTTPS protocols.
+* The admin page reports an invalid region or endpoint, and warns when a plain HTTP endpoint is allowed.
+* Upgrade note: if you use a plain `http://` endpoint (e.g. a local mock), add `allowInsecureEndpoint = 1` to the `[AmazonSES]` section of `config.ini.php`, otherwise sending fails.
+
 ### 0.1.0 - 2026-09-30
 
 * First release.
