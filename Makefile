@@ -3,7 +3,7 @@ EXEC = $(COMPOSE) exec -T -u www-data matomo
 EXEC_ROOT = $(COMPOSE) exec -T matomo
 CONSOLE = $(EXEC) php /var/www/html/console
 
-.PHONY: up down reset install logs shell test-email mails unit-test vue-build test
+.PHONY: up down reset install logs shell test-email mails unit-test vue-build test matomo-src
 
 up: ## start the stack
 	$(COMPOSE) up -d
@@ -42,22 +42,24 @@ unit-test: ## run unit tests in a throwaway PHP container (no Matomo needed)
 		composer require -q --no-interaction phpunit/phpunit:^9.6 phpmailer/phpmailer:^7.0 && \
 		cd /plugin && AMAZONSES_VENDOR_AUTOLOAD=/tmp/deps/vendor/autoload.php /tmp/deps/vendor/bin/phpunit -c tests/phpunit.standalone.xml'
 
-MATOMO_TAG ?= 5.14.0
+MATOMO_TAG ?= 6.0.0-rc1
 MATOMO_SRC ?= .cache/matomo
 
-$(MATOMO_SRC):
-	git clone --depth 1 --branch $(MATOMO_TAG) https://github.com/matomo-org/matomo.git $(MATOMO_SRC)
+# (re)clone the Matomo checkout when it is missing or on a different tag than MATOMO_TAG
+matomo-src:
+	@if [ "$(MATOMO_SRC)" = ".cache/matomo" ] && [ "$$(git -C $(MATOMO_SRC) describe --tags 2>/dev/null)" != "$(MATOMO_TAG)" ]; then \
+		rm -rf $(MATOMO_SRC) && git clone --depth 1 --branch $(MATOMO_TAG) https://github.com/matomo-org/matomo.git $(MATOMO_SRC); \
+	fi
 
-vue-build: $(MATOMO_SRC) ## compile vue/src into vue/dist (commit the result)
-	docker run --rm -v $(abspath $(MATOMO_SRC)):/matomo -v $(PWD):/matomo/plugins/AmazonSES -w /matomo node:16 sh -c '\
+vue-build: matomo-src ## compile vue/src into vue/dist with Vite (commit the result)
+	docker run --rm -v $(abspath $(MATOMO_SRC)):/matomo -v $(PWD):/matomo/plugins/AmazonSES -w /matomo node:24 sh -c '\
 		set -e; \
-		test -d node_modules/@vue/cli-service || npm ci --ignore-scripts --no-audit --no-fund; \
+		test -d node_modules/vite || npm ci --ignore-scripts --no-audit --no-fund; \
 		ALL=$$(ls -d plugins/*/vue/src/index.ts | cut -d/ -f2 | paste -sd, -); \
-		build() { BROWSERSLIST_IGNORE_OLD_DATA=1 MATOMO_CURRENT_PLUGIN=plugins/$$1 MATOMO_ALL_PLUGINS=$$ALL \
-			node plugins/CoreVue/scripts/cli-service-proxy.js build --target lib --name $$1 \
-			plugins/$$1/vue/src/index.ts --dest plugins/$$1/vue/dist; }; \
+		build() { MATOMO_CURRENT_PLUGIN=plugins/$$1 MATOMO_ALL_PLUGINS=$$ALL \
+			node plugins/CoreVue/scripts/vite-runner.mjs plugins/$$1; }; \
 		for dep in CoreHome CorePluginsAdmin; do test -f @types/$$dep/index.d.ts || build $$dep; done; \
 		build AmazonSES'
 
-test: $(MATOMO_SRC) ## run unit + integration tests with the Matomo test framework (SUITE=unit|integration)
+test: matomo-src ## run unit + integration tests with the Matomo test framework (SUITE=unit|integration)
 	MATOMO_SRC=$(abspath $(MATOMO_SRC)) SUITE=$(or $(SUITE),all) $(COMPOSE) --profile test run --rm --build tests
