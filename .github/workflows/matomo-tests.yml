@@ -59,21 +59,3 @@ jobs:
           php-version: ${{ matrix.php }}
           test-type: 'PluginTests'
           matomo-test-branch: ${{ matrix.target }}
-
-  # Early warning for the upcoming Matomo 6: failures do not block merges.
-  matomo-6-preview:
-    name: Matomo 6.x-dev (allowed to fail)
-    runs-on: ubuntu-24.04
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - name: Allow Matomo 6 for this run only
-        run: sed -i 's/<6.0.0-b1/<7.0.0-b1/' plugin.json
-      - uses: matomo-org/github-action-tests@main
-        with:
-          plugin-name: 'AmazonSES'
-          php-version: '8.4'
-          test-type: 'PluginTests'
-          matomo-test-branch: '6.x-dev'
