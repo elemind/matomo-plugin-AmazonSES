@@ -1,5 +1,11 @@
 ## Changelog
 
+### 1.0.0 - 2026-11-16
+
+* Compatible with Matomo 6. Requires Matomo 6 and PHP 8.1 or later.
+* No functional changes compared to 0.1.1.
+* Matomo 5 users stay on the 0.1.x versions, which will only receive security and critical fixes.
+
 ### 0.1.1 - 2026-10-05
 
 * Security: a custom SES endpoint must now use `https://`. Plain `http://` sent the AWS-signed requests and the email contents unencrypted; it is now rejected unless `allowInsecureEndpoint = 1` (or `AMAZONSES_ALLOW_INSECURE_ENDPOINT=1`) is set, which is meant for a local SES mock only. Endpoints with credentials, a query string or a fragment are rejected too.

@@ -1,11 +1,11 @@
 {
   "name": "AmazonSES",
   "description": "Send all Matomo emails through the Amazon SES API v2 (HTTPS) with IAM role, environment or access key credentials.",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "theme": false,
   "require": {
-    "matomo": ">=5.0.0,<6.0.0-b1",
-    "php": ">=7.2.5"
+    "matomo": ">=6.0.0-b1,<7.0.0-b1",
+    "php": ">=8.1.0"
   },
   "authors": [
     {

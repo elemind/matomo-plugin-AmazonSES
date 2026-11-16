@@ -18,7 +18,7 @@ The plugin replaces the Matomo mail transport. Scheduled reports (including PDF 
 * Every setting can also be set in `config.ini.php` for container and infrastructure-as-code deployments.
 * Errors are never hidden. If SES rejects a message, Matomo logs the exact AWS error; there is no silent fallback to SMTP.
 
-**Requirements**: Matomo 5, PHP 7.2.5+ with the cURL extension, and an Amazon SES identity (email address or domain) verified in the region you use.
+**Requirements**: Matomo 6, PHP 8.1+ with the cURL extension, and an Amazon SES identity (email address or domain) verified in the region you use. For Matomo 5, use plugin version 0.1.x.
 
 ## Installation
 

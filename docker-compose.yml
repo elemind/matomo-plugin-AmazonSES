@@ -24,7 +24,13 @@ services:
       - "8005:8005"
 
   matomo:
-    image: matomo:${MATOMO_VERSION:-5.14}-apache
+    # no official Matomo 6 image yet: built from a git tag (see .docker/matomo.Dockerfile)
+    build:
+      context: .docker
+      dockerfile: matomo.Dockerfile
+      target: matomo
+      args:
+        MATOMO_VERSION: ${MATOMO_VERSION:-6.0.0-rc1}
     depends_on:
       db:
         condition: service_healthy
@@ -57,9 +63,8 @@ services:
     profiles: ["test"]
     build:
       context: .docker
-      dockerfile: tests.Dockerfile
-      args:
-        MATOMO_VERSION: ${MATOMO_VERSION:-5.14}
+      dockerfile: matomo.Dockerfile
+      target: tests
     depends_on:
       db:
         condition: service_healthy
